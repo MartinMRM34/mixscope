@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -6,6 +7,17 @@ using System.Text.Json;
 namespace Mixscope.Vlc;
 
 public enum PlayState { Disconnected, Stopped, Paused, Playing }
+
+/// <summary>One audio elementary stream as VLC reports it in status.json.</summary>
+public sealed class VlcAudio
+{
+    public string Key = "";              // e.g. "Stream 1"
+    public string Codec = "";            // e.g. "A/52 B Audio (aka E-AC3) (eac3)"
+    public string Description = "";      // track title — often matches MediaInfo's Title
+    public string Language = "";         // e.g. "Tamil"
+    public string DecodedChannels = "";  // e.g. "Stereo", "3F2M/LFE" (present only once decoded)
+    public bool IsDecoded;               // VLC has actually decoded this stream (now or earlier)
+}
 
 /// <summary>Snapshot of what VLC is doing right now.</summary>
 public sealed class VlcStatus
@@ -17,11 +29,11 @@ public sealed class VlcStatus
     public double PositionSec;
     public double LengthSec;
 
-    // Best-effort hints about the *active* audio track, as VLC reports it.
-    // Present only when VLC is rendering audio (a real GUI instance); used to
-    // disambiguate which audio track to highlight when a file has several.
+    /// <summary>First audio codec — used only for the live-stream fallback label.</summary>
     public string? AudioCodec;
-    public string? AudioLanguage;
+
+    /// <summary>All audio elementary streams, used to detect which track is active.</summary>
+    public List<VlcAudio> AudioStreams = new();
 
     /// <summary>Set when the status request failed, for diagnostics.</summary>
     public string? DebugError;
@@ -104,13 +116,20 @@ public sealed class VlcClient
                     if (prop.Name == "meta")
                     {
                         if (prop.Value.TryGetProperty("filename", out var fn)) st.FileName = fn.GetString();
+                        continue;
                     }
-                    else if (prop.Value.ValueKind == JsonValueKind.Object &&
-                             prop.Value.TryGetProperty("Type", out var ty) &&
-                             string.Equals(ty.GetString(), "Audio", StringComparison.OrdinalIgnoreCase))
+                    if (prop.Value.ValueKind == JsonValueKind.Object &&
+                        prop.Value.TryGetProperty("Type", out var ty) &&
+                        string.Equals(ty.GetString(), "Audio", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (st.AudioCodec is null && prop.Value.TryGetProperty("Codec", out var cc)) st.AudioCodec = cc.GetString();
-                        if (st.AudioLanguage is null && prop.Value.TryGetProperty("Language", out var lg)) st.AudioLanguage = lg.GetString();
+                        var a = new VlcAudio { Key = prop.Name };
+                        if (prop.Value.TryGetProperty("Codec", out var cc)) a.Codec = cc.GetString() ?? "";
+                        if (prop.Value.TryGetProperty("Description", out var de)) a.Description = de.GetString() ?? "";
+                        if (prop.Value.TryGetProperty("Language", out var lg)) a.Language = lg.GetString() ?? "";
+                        if (prop.Value.TryGetProperty("Decoded_channels", out var dch)) a.DecodedChannels = dch.GetString() ?? "";
+                        a.IsDecoded = prop.Value.TryGetProperty("Decoded_format", out _);
+                        st.AudioStreams.Add(a);
+                        st.AudioCodec ??= a.Codec;
                     }
                 }
             }

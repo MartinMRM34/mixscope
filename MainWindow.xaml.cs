@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,6 +25,10 @@ public partial class MainWindow : Window
     private OverlayAnchor _anchor = OverlayAnchor.TopRight;
     private string? _probedPath;
     private ProbeResult? _probe;
+
+    // Active-audio-track tracking (reset per file).
+    private readonly HashSet<string> _decodedAudioKeys = new();
+    private string? _activeAudioKey;
 
     public MainWindow()
     {
@@ -118,10 +124,13 @@ public partial class MainWindow : Window
         {
             _probedPath = st.FilePath;
             _probe = null;
+            _decodedAudioKeys.Clear();
+            _activeAudioKey = null;
             Render("#4BA6E8", st.FileName, ("Analyzing…", "#9298A8", false));
             _probe = await MediaProbe.ProbeAsync(st.FilePath);
         }
 
+        UpdateActiveAudio(st.AudioStreams);
         RenderProbe(_probe!, st, paused);
     }
 
@@ -141,13 +150,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        int idx = 0;
-        if (probe.AudioTracks.Count > 1 && !string.IsNullOrWhiteSpace(st.AudioLanguage))
-        {
-            int m = probe.AudioTracks.FindIndex(t => LangMatch(t.Language, st.AudioLanguage!));
-            if (m >= 0) idx = m;
-        }
+        int idx = SelectActiveTrack(probe.AudioTracks, st);
         var track = probe.AudioTracks[idx];
+        Diag($"active T{idx + 1}/{probe.AudioTracks.Count} {track.PrimaryLabel} {track.ChannelText} key={_activeAudioKey}");
 
         string accent = AccentHex(track.Kind);
         var segs = new List<(string, string, bool)>
@@ -169,6 +174,93 @@ public partial class MainWindow : Window
         }
 
         Render(paused ? "#C8A24B" : accent, tip, segs.ToArray());
+    }
+
+    // ---- active audio track detection (HTTP-only) ----
+
+    // The active track is the audio stream VLC most-recently started decoding. On a fresh file
+    // only the default track carries Decoded_*; switching to another track makes it gain Decoded_*,
+    // which we latch onto. VLC keeps Decoded_* on a track once played, so toggling back to an
+    // already-played track can't be detected — a documented limitation.
+    private void UpdateActiveAudio(List<VlcAudio> streams)
+    {
+        var decoded = streams.Where(s => s.IsDecoded).Select(s => s.Key).ToList();
+        var newly = decoded.Where(k => !_decodedAudioKeys.Contains(k)).ToList();
+
+        if (newly.Count > 0)
+            _activeAudioKey = newly[^1];
+        else if (_activeAudioKey is null || !decoded.Contains(_activeAudioKey))
+            _activeAudioKey = decoded.FirstOrDefault() ?? streams.FirstOrDefault()?.Key;
+
+        _decodedAudioKeys.Clear();
+        foreach (var k in decoded) _decodedAudioKeys.Add(k);
+    }
+
+    // Map the active VLC audio stream onto the matching MediaInfo track (which carries the
+    // authoritative Atmos/DTS:X classification).
+    private int SelectActiveTrack(List<AudioTrackInfo> tracks, VlcStatus st)
+    {
+        if (tracks.Count <= 1 || st.AudioStreams.Count == 0) return 0;
+
+        var active = st.AudioStreams.FirstOrDefault(s => s.Key == _activeAudioKey)
+                     ?? st.AudioStreams.FirstOrDefault(s => s.IsDecoded)
+                     ?? st.AudioStreams[0];
+
+        // 1) strongest: MediaInfo track Title == VLC stream Description
+        if (!string.IsNullOrWhiteSpace(active.Description))
+        {
+            int m = tracks.FindIndex(t => TitleMatch(t.Title, active.Description));
+            if (m >= 0) return m;
+        }
+
+        // 2) codec family + language (+ channels), relaxing progressively
+        string fam = CodecFamily(active.Codec);
+        int ch = ChannelsFromVlc(active.DecodedChannels);
+
+        int i = tracks.FindIndex(t => CodecFamily(t.Format) == fam && LangMatch(t.Language, active.Language) && (ch == 0 || t.Channels == ch));
+        if (i >= 0) return i;
+        i = tracks.FindIndex(t => CodecFamily(t.Format) == fam && LangMatch(t.Language, active.Language));
+        if (i >= 0) return i;
+        i = tracks.FindIndex(t => CodecFamily(t.Format) == fam && ch > 0 && t.Channels == ch);
+        if (i >= 0) return i;
+        i = tracks.FindIndex(t => CodecFamily(t.Format) == fam);
+        return i >= 0 ? i : 0;
+    }
+
+    private static bool TitleMatch(string a, string b)
+    {
+        if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b)) return false;
+        a = a.Trim(); b = b.Trim();
+        return a.Equals(b, StringComparison.OrdinalIgnoreCase)
+               || a.Contains(b, StringComparison.OrdinalIgnoreCase)
+               || b.Contains(a, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string CodecFamily(string codec)
+    {
+        var c = new string((codec ?? "").ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+        if (c.Contains("eac3")) return "eac3";
+        if (c.Contains("truehd") || c.Contains("mlp")) return "truehd";
+        if (c.Contains("dts")) return "dts";
+        if (c.Contains("ac3")) return "ac3";
+        if (c.Contains("aac") || c.Contains("mp4a")) return "aac";
+        if (c.Contains("flac")) return "flac";
+        if (c.Contains("opus")) return "opus";
+        if (c.Contains("vorbis")) return "vorbis";
+        if (c.Contains("pcm")) return "pcm";
+        if (c.Contains("mpeg")) return "mp3";
+        return c;
+    }
+
+    private static int ChannelsFromVlc(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return 0;
+        if (s.Equals("Mono", StringComparison.OrdinalIgnoreCase)) return 1;
+        if (s.Equals("Stereo", StringComparison.OrdinalIgnoreCase)) return 2;
+        int sum = 0;
+        foreach (var ch in s) if (char.IsDigit(ch)) sum += ch - '0';
+        if (s.IndexOf("LFE", StringComparison.OrdinalIgnoreCase) >= 0) sum += 1;
+        return sum;
     }
 
     // ---- inline bar rendering ----

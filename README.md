@@ -83,6 +83,16 @@ mixscope is a background companion for VLC: it stays invisible while VLC is clos
 | teal | lossy surround (DD+, DD, DTS core) |
 | grey | stereo / mono |
 
+## Known limitations
+
+- **Audio-track switching:** mixscope shows the correct *default* track and follows a switch to a
+  track you haven't played yet in the current file. But if you switch **back** to a track you
+  already played earlier in the same sitting, the bar may keep showing the previous one until you
+  pick a different track. VLC's web interface stops reporting which track is "live" once both have
+  been decoded, and the one interface that does (RC) opens a remote-control socket that antivirus
+  flags — so it's deliberately not used.
+- **VLC only** — see the note at the top; browser and Microsoft Store streaming apps can't be read.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Bundles the MediaInfo CLI (BSD-2-Clause) by MediaArea.

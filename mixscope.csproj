@@ -9,7 +9,8 @@
     <AssemblyName>mixscope</AssemblyName>
     <RootNamespace>Mixscope</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>0.1.0</Version>
+    <ApplicationIcon>mixscope.ico</ApplicationIcon>
+    <Version>0.2.0</Version>
   </PropertyGroup>
 
   <!-- No external packages: VLC via HttpClient, MediaInfo via Process, JSON via System.Text.Json -->

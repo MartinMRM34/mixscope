@@ -5,7 +5,7 @@
 ; Installs per-user (no admin), adds a Start Menu entry, optional auto-start, and an uninstaller.
 
 #define MyAppName "mixscope"
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "0.2.0"
 #define MyAppPublisher "Martin"
 #define MyAppExeName "mixscope.exe"
 
@@ -17,6 +17,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\mixscope
 DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
+SetupIconFile=mixscope.ico
 OutputDir=dist
 OutputBaseFilename=mixscope-Setup-{#MyAppVersion}
 Compression=lzma2
