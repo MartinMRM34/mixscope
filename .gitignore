@@ -1,0 +1,12 @@
+# Build output
+bin/
+obj/
+dist/
+
+# IDE
+.vs/
+*.user
+*.suo
+
+# Local runtime/diagnostics
+*.pdb
