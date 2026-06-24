@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
-namespace AudioChannelOverlay.Probe;
+namespace Mixscope.Probe;
 
 public enum SpatialKind { Atmos, DtsX, LosslessSurround, LossySurround, Stereo, Mono, Other }
 

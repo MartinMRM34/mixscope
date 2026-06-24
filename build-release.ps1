@@ -10,10 +10,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $root  = Split-Path -Parent $MyInvocation.MyCommand.Path
-$proj  = Join-Path $root "AudioChannelOverlay.csproj"
+$proj  = Join-Path $root "mixscope.csproj"
 $dist  = Join-Path $root "dist"
-$stage = Join-Path $dist "AudioChannelOverlay"
-$zip   = Join-Path $dist "AudioChannelOverlay-$Version-win-x64.zip"
+$stage = Join-Path $dist "mixscope"
+$zip   = Join-Path $dist "mixscope-$Version-win-x64.zip"
 
 Remove-Item $dist -Recurse -Force -ErrorAction SilentlyContinue
 

@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
-namespace AudioChannelOverlay.Vlc;
+namespace Mixscope.Vlc;
 
 public enum PlayState { Disconnected, Stopped, Paused, Playing }
 

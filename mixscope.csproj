@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <AssemblyName>AudioChannelOverlay</AssemblyName>
-    <RootNamespace>AudioChannelOverlay</RootNamespace>
+    <AssemblyName>mixscope</AssemblyName>
+    <RootNamespace>Mixscope</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Version>0.1.0</Version>
   </PropertyGroup>

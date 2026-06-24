@@ -6,10 +6,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using AudioChannelOverlay.Probe;
-using AudioChannelOverlay.Vlc;
+using Mixscope.Probe;
+using Mixscope.Vlc;
 
-namespace AudioChannelOverlay;
+namespace Mixscope;
 
 public enum OverlayAnchor { TopLeft, TopCenter, TopRight, BottomLeft, BottomCenter, BottomRight, Custom }
 
@@ -240,7 +240,7 @@ public partial class MainWindow : Window
         new((Color)ColorConverter.ConvertFromString(hex)!);
 
     private static readonly string DiagPath = System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AudioChannelOverlay", "status.txt");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "mixscope", "status.txt");
 
     private static string _lastDiag = "";
 
@@ -288,7 +288,7 @@ public partial class MainWindow : Window
     }
 
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string RunValueName = "AudioChannelOverlay";
+    private const string RunValueName = "mixscope";
 
     private static bool IsAutoStartEnabled()
     {

@@ -1,10 +1,10 @@
 using System.IO;
 using System.Text.Json;
 
-namespace AudioChannelOverlay;
+namespace Mixscope;
 
 /// <summary>
-/// User-editable settings, persisted to %APPDATA%\AudioChannelOverlay\config.json.
+/// User-editable settings, persisted to %APPDATA%\mixscope\config.json.
 /// </summary>
 public sealed class Config
 {
@@ -31,7 +31,7 @@ public sealed class Config
     public double? Top { get; set; }
 
     private static string Dir => System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AudioChannelOverlay");
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "mixscope");
 
     private static string FilePath => System.IO.Path.Combine(Dir, "config.json");
 

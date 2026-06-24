@@ -1,24 +1,24 @@
-; Inno Setup script for Audio Channel Overlay
+; Inno Setup script for mixscope
 ; Build the payload first:  ./build-release.ps1
-; Then compile this with Inno Setup (ISCC.exe installer.iss) to produce dist\AudioChannelOverlay-Setup-*.exe
+; Then compile this with Inno Setup (ISCC.exe installer.iss) to produce dist\mixscope-Setup-*.exe
 ;
 ; Installs per-user (no admin), adds a Start Menu entry, optional auto-start, and an uninstaller.
 
-#define MyAppName "Audio Channel Overlay"
+#define MyAppName "mixscope"
 #define MyAppVersion "0.1.0"
 #define MyAppPublisher "Martin"
-#define MyAppExeName "AudioChannelOverlay.exe"
+#define MyAppExeName "mixscope.exe"
 
 [Setup]
-AppId={{8F2A6C14-3B9E-4D77-A1E2-9C5B7F0A2D31}
+AppId={{C4E2A7F1-9D3B-4A6E-B8C2-1F5D7E0A9B34}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\AudioChannelOverlay
+DefaultDirName={autopf}\mixscope
 DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
 OutputDir=dist
-OutputBaseFilename=AudioChannelOverlay-Setup-{#MyAppVersion}
+OutputBaseFilename=mixscope-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -27,7 +27,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 
 [Files]
-Source: "dist\AudioChannelOverlay\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\mixscope\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -37,7 +37,7 @@ Name: "autostart"; Description: "Start automatically with Windows (recommended)"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; \
-    ValueName: "AudioChannelOverlay"; ValueData: """{app}\{#MyAppExeName}"""; \
+    ValueName: "mixscope"; ValueData: """{app}\{#MyAppExeName}"""; \
     Tasks: autostart; Flags: uninsdeletevalue
 
 [Run]

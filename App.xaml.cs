@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace AudioChannelOverlay;
+namespace Mixscope;
 
 public partial class App : Application
 {
