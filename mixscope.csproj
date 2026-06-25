@@ -10,7 +10,7 @@
     <RootNamespace>Mixscope</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>mixscope.ico</ApplicationIcon>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
   </PropertyGroup>
 
   <!-- No external packages: VLC via HttpClient, MediaInfo via Process, JSON via System.Text.Json -->

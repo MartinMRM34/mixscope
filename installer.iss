@@ -5,7 +5,7 @@
 ; Installs per-user (no admin), adds a Start Menu entry, optional auto-start, and an uninstaller.
 
 #define MyAppName "mixscope"
-#define MyAppVersion "0.2.0"
+#define MyAppVersion "0.2.1"
 #define MyAppPublisher "Martin"
 #define MyAppExeName "mixscope.exe"
 

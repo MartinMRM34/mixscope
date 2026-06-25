@@ -95,8 +95,20 @@ public static class MediaProbe
             psi.ArgumentList.Add(filePath);
 
             using var proc = Process.Start(psi)!;
-            json = await proc.StandardOutput.ReadToEndAsync();
-            await proc.WaitForExitAsync();
+            // Hard timeout: a probe must never hang the overlay's poll loop (e.g. MediaInfo
+            // stalling on a file on a slow/sleeping/disconnected drive).
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(12));
+            try
+            {
+                json = await proc.StandardOutput.ReadToEndAsync(cts.Token);
+                await proc.WaitForExitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                try { proc.Kill(entireProcessTree: true); } catch { /* best effort */ }
+                result.Error = "MediaInfo timed out";
+                return result;
+            }
         }
         catch (Exception ex) { result.Error = ex.Message; return result; }
 
